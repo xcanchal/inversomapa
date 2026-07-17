@@ -35,6 +35,10 @@ const otherLocale = locale === "ca" ? "es" : "ca";
     <header class="site-header">
       <a class="site-name" href={appPath(`/${locale}/`)}>{UI.title[locale]}</a>
       <span class="tagline">{UI.tagline[locale]}</span>
+      <a class="book-link" href="https://amzn.to/4flffPD" target="_blank"
+        rel="sponsored noopener noreferrer" aria-label={`${UI.bookCta[locale]}: ${UI.bookTitle}`}>
+        <span>{UI.bookCta[locale]}</span><span class="book-link-title">{UI.bookTitle}</span><span aria-hidden="true">↗</span>
+      </a>
       <nav class="lang" aria-label="Language">
         <a href={locale === "ca" ? Astro.url.pathname : appPath(altPath)} data-active={locale === "ca"}>CA</a><a
           href={locale === "es" ? Astro.url.pathname : appPath(altPath)} data-active={locale === "es"}>ES</a>
@@ -103,6 +107,17 @@ const otherLocale = locale === "ca" ? "es" : "ca";
     color: var(--ink); text-decoration: none;
   }
   .tagline { font-size: 13px; color: var(--muted); flex: 1; }
+  .book-link {
+    display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px;
+    border: 1px solid #b89623; border-radius: 999px; background: #f6d85f;
+    color: #352b0c; font-size: 12px; font-weight: 700; line-height: 1;
+    text-decoration: none; box-shadow: 0 2px 0 #d2b23e;
+    transition: background 0.12s, box-shadow 0.12s, transform 0.12s;
+  }
+  .book-link-title { font-weight: 600; }
+  .book-link:hover { background: #ffe27a; box-shadow: 0 3px 0 #b89623; transform: translateY(-1px); }
+  .book-link:focus-visible { outline: 3px solid #17694b; outline-offset: 3px; }
+  @media (max-width: 680px) { .book-link-title { display: none; } }
   .lang a {
     display: inline-block; border: 1px solid var(--line); background: var(--surface);
     color: var(--muted); font-size: 12px; font-weight: 600;

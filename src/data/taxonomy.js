@@ -9,6 +9,8 @@ const UI = {
     "els productes d'inversió, d'un cop d'ull",
     "los productos de inversión, de un vistazo"
   ),
+  bookCta: T("Llibre recomanat", "Libro recomendado"),
+  bookTitle: "Invertir tus ahorros para Dummies",
   inCategory: T("Dins d'aquesta categoria", "Dentro de esta categoría"),
   dedicated: T("pàgina dedicada", "página dedicada"),
   close: T("Tanca el panell", "Cierra el panel"),
