@@ -75,19 +75,38 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
     const el = scrollerRef.current;
     if (!el) return;
     try {
-      sessionStorage.setItem(scrollKey, JSON.stringify({ left: el.scrollLeft, top: el.scrollTop }));
+      sessionStorage.setItem(scrollKey, JSON.stringify({
+        left: el.scrollLeft,
+        top: el.scrollTop,
+        preserveSelection: true,
+      }));
     } catch (e) {}
   };
 
   useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    let saved = null;
     try {
-      const saved = sessionStorage.getItem(scrollKey);
-      if (!saved || !scrollerRef.current) return;
-      const { left, top } = JSON.parse(saved);
-      scrollerRef.current.scrollLeft = left;
-      scrollerRef.current.scrollTop = top;
+      saved = JSON.parse(sessionStorage.getItem(scrollKey));
+      sessionStorage.removeItem(scrollKey);
     } catch (e) {}
-  }, [scrollKey]);
+
+    if (saved?.preserveSelection) {
+      el.scrollLeft = saved.left;
+      el.scrollTop = saved.top;
+      return;
+    }
+
+    const selected = layout.nodes.find((n) => n.slug === activeSelectedSlug);
+    if (!selected) return;
+
+    const left = selected.x + selected.w / 2 - el.clientWidth / 2;
+    const top = selected.y - el.clientHeight / 2;
+    el.scrollLeft = Math.max(0, Math.min(left, el.scrollWidth - el.clientWidth));
+    el.scrollTop = Math.max(0, Math.min(top, el.scrollHeight - el.clientHeight));
+  }, [scrollKey, layout, activeSelectedSlug]);
 
   const onPointerDown = (e) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
