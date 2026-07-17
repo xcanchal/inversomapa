@@ -26,7 +26,7 @@ const base = import.meta.env.BASE_URL;
   <main class="layout">
     <div class="graph-pane">
       <ViewTabs locale={locale} active="horizon" />
-      <Graph client:load locale={locale} view="horizon" selectedSlug={root.slug} />
+      <Graph client:load locale={locale} view="horizon" selectedSlug={null} />
       <div class="graph-tip">{UI.tip[locale]}</div>
     </div>
     <aside class="panel">
