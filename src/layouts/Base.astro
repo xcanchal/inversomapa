@@ -59,6 +59,23 @@ const socialImage = new URL(appPath("/og-image.png"), site);
       const pane = document.querySelector(".graph-pane");
       const panel = document.querySelector(".panel");
       if (pane && panel) {
+        const layout = pane.closest(".layout");
+        const drawerToggle = document.createElement("button");
+        drawerToggle.type = "button";
+        drawerToggle.className = "drawer-toggle";
+        drawerToggle.dataset.label = document.documentElement.lang === "ca" ? "Mostra el detall" : "Ver detalles";
+        drawerToggle.setAttribute("aria-label", drawerToggle.dataset.label);
+        drawerToggle.setAttribute("aria-expanded", "true");
+        drawerToggle.addEventListener("click", () => {
+          const collapsed = panel.classList.toggle("is-collapsed");
+          layout.classList.toggle("drawer-collapsed", collapsed);
+          drawerToggle.setAttribute("aria-expanded", String(!collapsed));
+          drawerToggle.dataset.label = document.documentElement.lang === "ca"
+            ? (collapsed ? "Mostra el detall" : "Amaga el detall")
+            : (collapsed ? "Ver detalles" : "Ocultar detalles");
+          drawerToggle.setAttribute("aria-label", drawerToggle.dataset.label);
+        });
+        panel.prepend(drawerToggle);
         const rz = document.createElement("div");
         rz.className = "panel-resizer";
         rz.setAttribute("aria-hidden", "true");
@@ -145,6 +162,9 @@ const socialImage = new URL(appPath("/og-image.png"), site);
   }
   @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
   .graph-pane { position: relative; overflow: hidden; min-width: 0; }
+  .graph-viewport { position: relative; height: 100%; }
+  .graph-scroller { overscroll-behavior: contain; }
+  .drawer-toggle { display: none; }
   .panel {
     background: var(--surface); border-left: 1px solid var(--line);
     padding: 28px 26px 34px; overflow-y: auto;
@@ -154,17 +174,30 @@ const socialImage = new URL(appPath("/og-image.png"), site);
     .site-header { flex: 0 0 auto; }
     .layout { flex: 1; min-height: 0; display: block; position: relative; }
     .graph-pane { height: 100%; padding-bottom: min(42dvh, 330px); }
+    .layout.drawer-collapsed .graph-pane { padding-bottom: 54px; }
     .panel {
       position: absolute; z-index: 3; right: 0; bottom: 0; left: 0;
       max-height: min(42dvh, 330px); padding: 28px 20px 22px;
       overflow-y: auto; border: 1px solid var(--line); border-bottom: 0;
       border-radius: 22px 22px 0 0; box-shadow: 0 -12px 30px rgba(24, 36, 32, 0.12);
     }
-    .panel::before {
+    .graph-tip { bottom: min(42dvh, 330px); margin-bottom: 12px; }
+    .layout.drawer-collapsed .graph-tip { bottom: 66px; }
+    .drawer-toggle {
+      display: block; position: absolute; z-index: 1; top: 0; right: 0; left: 0; width: 100%;
+      height: 28px; border: 0; background: transparent; cursor: pointer;
+    }
+    .drawer-toggle::before {
       content: ""; position: absolute; top: 10px; left: 50%; width: 38px; height: 4px;
       border-radius: 999px; background: #b8c5bd; transform: translateX(-50%);
     }
-    .graph-tip { bottom: min(42dvh, 330px); margin-bottom: 12px; }
+    .panel.is-collapsed { min-height: 54px; max-height: 54px; padding: 0; overflow: hidden; }
+    .panel.is-collapsed > :not(.drawer-toggle) { visibility: hidden; }
+    .panel.is-collapsed .drawer-toggle { height: 54px; }
+    .panel.is-collapsed .drawer-toggle::after {
+      content: attr(data-label); position: absolute; top: 25px; left: 0; right: 0;
+      color: var(--muted); font-size: 12px; font-weight: 700; text-align: center;
+    }
   }
   .view-tabs { position: absolute; top: 14px; left: 16px; z-index: 2; display: flex; }
   .view-tabs a {
@@ -186,6 +219,18 @@ const socialImage = new URL(appPath("/og-image.png"), site);
     font-size: 11px; color: var(--muted);
     pointer-events: none; box-shadow: 0 1px 4px rgba(24, 36, 32, 0.06);
   }
+  .graph-zoom {
+    position: absolute; z-index: 2; right: 14px; bottom: 14px; display: grid;
+    overflow: hidden; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); box-shadow: 0 2px 8px rgba(24, 36, 32, 0.12);
+  }
+  .graph-zoom button {
+    width: 35px; height: 32px; border: 0; border-bottom: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); font-size: 20px; line-height: 1; cursor: pointer;
+  }
+  .graph-zoom button:hover { background: var(--tint); }
+  .graph-zoom button:last-child { border-bottom: 0; }
+  .graph-zoom .reset { font-size: 17px; }
   .panel-resizer {
     position: absolute; top: 0; right: 0; bottom: 0; width: 8px;
     cursor: col-resize; touch-action: none; z-index: 2;
@@ -225,5 +270,7 @@ const socialImage = new URL(appPath("/og-image.png"), site);
     .panel h1 { font-size: 23px; }
     .panel p { font-size: 14px; line-height: 1.55; margin: 10px 0 18px; }
     .graph-tip { display: none; }
+    .graph-zoom { right: 12px; bottom: 12px; }
+    .layout:not(.drawer-collapsed) .graph-zoom { bottom: min(42dvh, 330px); margin-bottom: 12px; }
   }
 </style>

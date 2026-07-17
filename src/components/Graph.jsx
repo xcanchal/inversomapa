@@ -51,6 +51,7 @@ const C = {
 export default function Graph({ locale, view = "products", selectedSlug = null, inlineDetails = false }) {
   const base = import.meta.env.BASE_URL;
   const [inlineSelectedSlug, setInlineSelectedSlug] = useState(null);
+  const [zoom, setZoom] = useState(1);
   const layout = useMemo(() => buildLayout(viewTree(view), locale), [locale, view]);
   const activeSelectedSlug = inlineDetails ? inlineSelectedSlug : selectedSlug;
 
@@ -112,7 +113,7 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
   }, [scrollKey, layout, activeSelectedSlug]);
 
   const onPointerDown = (e) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
     const el = scrollerRef.current;
     drag.current = {
       x: e.clientX, y: e.clientY,
@@ -161,15 +162,41 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
     saveScrollPosition();
   };
 
+  const changeZoom = (nextZoom) => {
+    const el = scrollerRef.current;
+    const bounded = Math.min(1.8, Math.max(0.6, nextZoom));
+    if (!el || bounded === zoom) return;
+    const ratio = bounded / zoom;
+    const centerX = el.scrollLeft + el.clientWidth / 2;
+    const centerY = el.scrollTop + el.clientHeight / 2;
+    setZoom(bounded);
+    requestAnimationFrame(() => {
+      el.scrollLeft = centerX * ratio - el.clientWidth / 2;
+      el.scrollTop = centerY * ratio - el.clientHeight / 2;
+    });
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    requestAnimationFrame(() => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      el.scrollLeft = 0;
+      el.scrollTop = 0;
+    });
+  };
+
   return (
-    <div ref={scrollerRef} className="graph-scroller"
-      style={{ overflow: "auto", height: "100%", padding: "8px 0 40px", cursor: "grab", touchAction: "none" }}
-      onPointerDown={onPointerDown} onPointerMove={onPointerMove}
-      onPointerUp={endDrag} onPointerCancel={endDrag} onClickCapture={onClickCapture}>
-      <svg width={layout.width} height={layout.height} role="img"
-        aria-label={UI.ariaTree[locale]}
-        style={{ display: "block", userSelect: "none" }}>
-        {layout.edges.map(({ from, to }) => {
+    <div className="graph-viewport">
+      <div ref={scrollerRef} className="graph-scroller"
+        style={{ overflow: "auto", height: "100%", padding: "8px 0 40px", cursor: "grab", touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove}
+        onPointerUp={endDrag} onPointerCancel={endDrag} onClickCapture={onClickCapture}>
+        <svg width={layout.width * zoom} height={layout.height * zoom} role="img"
+          aria-label={UI.ariaTree[locale]}
+          style={{ display: "block", userSelect: "none" }}>
+          <g transform={`scale(${zoom})`}>
+          {layout.edges.map(({ from, to }) => {
           const x1 = from.x + from.w, x2 = to.x, mx = (x1 + x2) / 2;
           const onTrail = trail.has(to.slug);
           return (
@@ -179,7 +206,7 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
               strokeWidth={onTrail ? 2 : 1.25} />
           );
         })}
-        {layout.nodes.map((n) => {
+          {layout.nodes.map((n) => {
           const isSel = activeSelectedSlug === n.slug;
           const onTrail = trail.has(n.slug);
           return (
@@ -200,8 +227,15 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
               </g>
             </a>
           );
-        })}
-      </svg>
+          })}
+          </g>
+        </svg>
+      </div>
+      <div className="graph-zoom" aria-label={locale === "ca" ? "Controls del mapa" : "Controles del mapa"}>
+        <button type="button" onClick={() => changeZoom(zoom + 0.2)} aria-label={locale === "ca" ? "Apropa el mapa" : "Acerca el mapa"}>+</button>
+        <button type="button" onClick={() => changeZoom(zoom - 0.2)} aria-label={locale === "ca" ? "Allunya el mapa" : "Aleja el mapa"}>−</button>
+        <button type="button" className="reset" onClick={resetView} aria-label={locale === "ca" ? "Reinicia el mapa" : "Restablece el mapa"}>↺</button>
+      </div>
     </div>
   );
 }
