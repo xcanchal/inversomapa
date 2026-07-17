@@ -1,6 +1,7 @@
 ---
 import Base from "../../../layouts/Base.astro";
 import Graph from "../../../components/Graph.jsx";
+import ViewTabs from "../../../components/ViewTabs.astro";
 import { UI, flatten, withBase } from "../../../data/taxonomy.js";
 
 export function getStaticPaths() {
@@ -46,6 +47,7 @@ const breadcrumbLd = {
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
   <main class="layout">
     <div class="graph-pane">
+      <ViewTabs locale={locale} active={node.view} />
       <Graph client:load locale={locale} view={node.view} selectedSlug={node.slug} />
     </div>
     <aside class="panel">
