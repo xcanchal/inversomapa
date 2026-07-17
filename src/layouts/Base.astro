@@ -8,6 +8,7 @@ const here = new URL(Astro.url.pathname, site);
 const alt = new URL(appPath(altPath), site);
 const defaultPath = locale === "ca" ? Astro.url.pathname : appPath(altPath);
 const otherLocale = locale === "ca" ? "es" : "ca";
+const socialImage = new URL(appPath("/og-image.png"), site);
 ---
 <!doctype html>
 <html lang={locale}>
@@ -23,6 +24,15 @@ const otherLocale = locale === "ca" ? "es" : "ca";
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={here} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1730" />
+    <meta property="og:image:height" content="909" />
+    <meta property="og:image:alt" content={UI.title[locale]} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
     <link rel="sitemap" href={appPath("/sitemap-index.xml")} />
     <script is:inline>
       try {
@@ -37,7 +47,7 @@ const otherLocale = locale === "ca" ? "es" : "ca";
       <span class="tagline">{UI.tagline[locale]}</span>
       <a class="book-link" href="https://amzn.to/4flffPD" target="_blank"
         rel="sponsored noopener noreferrer" aria-label={`${UI.bookCta[locale]}: ${UI.bookTitle}`}>
-        <span>{UI.bookCta[locale]}</span><span class="book-link-title">{UI.bookTitle}</span><span aria-hidden="true">↗</span>
+        <span>{UI.bookCta[locale]}</span><span aria-hidden="true">↗</span>
       </a>
       <nav class="lang" aria-label="Language">
         <a href={locale === "ca" ? Astro.url.pathname : appPath(altPath)} data-active={locale === "ca"}>CA</a><a
@@ -114,10 +124,8 @@ const otherLocale = locale === "ca" ? "es" : "ca";
     text-decoration: none; box-shadow: 0 2px 0 #d2b23e;
     transition: background 0.12s, box-shadow 0.12s, transform 0.12s;
   }
-  .book-link-title { font-weight: 600; }
   .book-link:hover { background: #ffe27a; box-shadow: 0 3px 0 #b89623; transform: translateY(-1px); }
   .book-link:focus-visible { outline: 3px solid #17694b; outline-offset: 3px; }
-  @media (max-width: 680px) { .book-link-title { display: none; } }
   .lang a {
     display: inline-block; border: 1px solid var(--line); background: var(--surface);
     color: var(--muted); font-size: 12px; font-weight: 600;
