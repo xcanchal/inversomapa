@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { UI, viewTree, viewRootHref, withBase } from "../data/taxonomy.js";
 
 const ROW = 54, GAP = 56, PAD = 28, FONT_MAIN = 13.5, CHAR_W = 7.4;
@@ -69,6 +69,25 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
   const scrollerRef = useRef(null);
   const drag = useRef(null);
   const suppressClick = useRef(false);
+  const scrollKey = `graph-position:${view}`;
+
+  const saveScrollPosition = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    try {
+      sessionStorage.setItem(scrollKey, JSON.stringify({ left: el.scrollLeft, top: el.scrollTop }));
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(scrollKey);
+      if (!saved || !scrollerRef.current) return;
+      const { left, top } = JSON.parse(saved);
+      scrollerRef.current.scrollLeft = left;
+      scrollerRef.current.scrollTop = top;
+    } catch (e) {}
+  }, [scrollKey]);
 
   const onPointerDown = (e) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -111,10 +130,13 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
     }
   };
   const onNodeClick = (e, n) => {
-    if (!inlineDetails || n.depth === 0) return;
-    e.preventDefault();
-    setInlineSelectedSlug(n.slug);
-    window.dispatchEvent(new CustomEvent("graph-node-select", { detail: n }));
+    if (inlineDetails && n.depth !== 0) {
+      e.preventDefault();
+      setInlineSelectedSlug(n.slug);
+      window.dispatchEvent(new CustomEvent("graph-node-select", { detail: n }));
+      return;
+    }
+    saveScrollPosition();
   };
 
   return (
