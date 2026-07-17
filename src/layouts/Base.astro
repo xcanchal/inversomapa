@@ -184,20 +184,14 @@ const socialImage = new URL(appPath("/og-image.png"), site);
     .graph-tip { bottom: min(42dvh, 330px); margin-bottom: 12px; }
     .layout.drawer-collapsed .graph-tip { bottom: 66px; }
     .drawer-toggle {
-      display: block; position: absolute; z-index: 1; top: 0; right: 0; left: 0; width: 100%;
-      height: 28px; border: 0; background: transparent; cursor: pointer;
+      display: grid; place-items: center; position: absolute; z-index: 1; top: 5px; right: 7px;
+      width: 38px; height: 38px; border: 0; border-radius: 10px; background: transparent; cursor: pointer;
     }
-    .drawer-toggle::before {
-      content: ""; position: absolute; top: 10px; left: 50%; width: 38px; height: 4px;
-      border-radius: 999px; background: #b8c5bd; transform: translateX(-50%);
-    }
+    .drawer-toggle::before { content: "⌄"; color: var(--muted); font-size: 25px; line-height: 1; }
+    .drawer-toggle:hover { background: var(--tint); }
     .panel.is-collapsed { min-height: 54px; max-height: 54px; padding: 0; overflow: hidden; }
     .panel.is-collapsed > :not(.drawer-toggle) { visibility: hidden; }
-    .panel.is-collapsed .drawer-toggle { height: 54px; }
-    .panel.is-collapsed .drawer-toggle::after {
-      content: attr(data-label); position: absolute; top: 25px; left: 0; right: 0;
-      color: var(--muted); font-size: 12px; font-weight: 700; text-align: center;
-    }
+    .panel.is-collapsed .drawer-toggle::before { content: "⌃"; }
   }
   .view-tabs { position: absolute; top: 14px; left: 16px; z-index: 2; display: flex; }
   .view-tabs a {
