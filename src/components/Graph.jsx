@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { UI, viewTree, viewRootHref, withBase } from "../data/taxonomy.js";
 
 const ROW = 54, GAP = 56, PAD = 28, FONT_MAIN = 13.5, CHAR_W = 7.4;
@@ -10,7 +10,10 @@ function buildLayout(root, locale) {
     const label = n.label[locale];
     const sub = n.sub ? n.sub[locale] : null;
     const w = Math.max(label.length * CHAR_W, sub ? sub.length * 6.1 : 0) + 30;
-    const node = { slug: n.slug[locale], label, sub, depth, parent, w, h: sub ? 44 : 32 };
+    const node = {
+      slug: n.slug[locale], label, sub, desc: n.desc ? n.desc[locale] : null,
+      depth, parent, w, h: sub ? 44 : 32,
+    };
     if (n.children && n.children.length) {
       node.childNodes = n.children.map((c) => visit(c, depth + 1, node));
       const ys = node.childNodes.map((c) => c.y);
@@ -45,16 +48,18 @@ const C = {
  * Static-navigation graph: clicking a node goes to its real URL.
  * props: locale ("ca"|"es"), view ("products"|"horizon"), selectedSlug
  */
-export default function Graph({ locale, view = "products", selectedSlug = null }) {
+export default function Graph({ locale, view = "products", selectedSlug = null, inlineDetails = false }) {
   const base = import.meta.env.BASE_URL;
+  const [inlineSelectedSlug, setInlineSelectedSlug] = useState(null);
   const layout = useMemo(() => buildLayout(viewTree(view), locale), [locale, view]);
+  const activeSelectedSlug = inlineDetails ? inlineSelectedSlug : selectedSlug;
 
   const trail = useMemo(() => {
     const set = new Set();
-    let cur = layout.nodes.find((n) => n.slug === selectedSlug) || null;
+    let cur = layout.nodes.find((n) => n.slug === activeSelectedSlug) || null;
     while (cur) { set.add(cur.slug); cur = cur.parent; }
     return set;
-  }, [layout, selectedSlug]);
+  }, [layout, activeSelectedSlug]);
 
   const hrefFor = (n) => withBase(
     n.depth === 0 ? viewRootHref(view, locale) : `/${locale}/guia/${n.slug}/`,
@@ -105,6 +110,12 @@ export default function Graph({ locale, view = "products", selectedSlug = null }
       e.stopPropagation();
     }
   };
+  const onNodeClick = (e, n) => {
+    if (!inlineDetails || n.depth === 0) return;
+    e.preventDefault();
+    setInlineSelectedSlug(n.slug);
+    window.dispatchEvent(new CustomEvent("graph-node-select", { detail: n }));
+  };
 
   return (
     <div ref={scrollerRef}
@@ -125,10 +136,11 @@ export default function Graph({ locale, view = "products", selectedSlug = null }
           );
         })}
         {layout.nodes.map((n) => {
-          const isSel = selectedSlug === n.slug;
+          const isSel = activeSelectedSlug === n.slug;
           const onTrail = trail.has(n.slug);
           return (
-            <a key={n.slug} href={hrefFor(n)} aria-label={n.label}>
+            <a key={n.slug} href={hrefFor(n)} aria-label={n.label}
+              onClick={(e) => onNodeClick(e, n)}>
               <g transform={`translate(${n.x}, ${n.y - n.h / 2})`} style={{ cursor: "pointer" }}>
                 <rect width={n.w} height={n.h} rx={n.h / 2}
                   fill={isSel ? C.green : C.surface}

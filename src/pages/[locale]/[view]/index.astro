@@ -26,18 +26,33 @@ const base = import.meta.env.BASE_URL;
   <main class="layout">
     <div class="graph-pane">
       <ViewTabs locale={locale} active="horizon" />
-      <Graph client:load locale={locale} view="horizon" selectedSlug={null} />
+      <Graph client:load locale={locale} view="horizon" selectedSlug={null} inlineDetails />
       <div class="graph-tip">{UI.tip[locale]}</div>
     </div>
-    <aside class="panel">
-      <h1 class="serif">{root.label}</h1>
-      <p>{root.desc}</p>
-      <div class="section-label">{UI.inCategory[locale]}</div>
-      <div>
+    <aside class="panel" data-inline-details>
+      <h1 class="serif" data-panel-title>{root.label}</h1>
+      <div class="sub" data-panel-sub hidden={!root.sub}>{root.sub}</div>
+      <p data-panel-description>{root.desc}</p>
+      <div data-panel-children>
+        <div class="section-label">{UI.inCategory[locale]}</div>
+        <div>
         {root.children.map((c) => (
           <a class="chip" href={withBase(`/${locale}/guia/${c.slug}/`, base)}>{c.label}</a>
         ))}
+        </div>
       </div>
     </aside>
   </main>
+  <script>
+    const panel = document.querySelector("[data-inline-details]");
+    if (panel) window.addEventListener("graph-node-select", (event) => {
+      const { label, sub, desc } = event.detail;
+      panel.querySelector("[data-panel-title]").textContent = label;
+      const subtitle = panel.querySelector("[data-panel-sub]");
+      subtitle.textContent = sub || "";
+      subtitle.hidden = !sub;
+      panel.querySelector("[data-panel-description]").textContent = desc || "";
+      panel.querySelector("[data-panel-children]").hidden = true;
+    });
+  </script>
 </Base>
