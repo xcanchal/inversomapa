@@ -73,7 +73,6 @@ export default function Graph({ locale, view = "products", selectedSlug = null }
       left: el.scrollLeft, top: el.scrollTop,
       id: e.pointerId, moved: false,
     };
-    el.setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e) => {
     const d = drag.current;
