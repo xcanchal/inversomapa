@@ -99,7 +99,10 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
       return;
     }
 
-    const selected = layout.nodes.find((n) => n.slug === activeSelectedSlug);
+    const selected = layout.nodes.find((n) => n.slug === activeSelectedSlug)
+      || (window.matchMedia("(max-width: 900px)").matches
+        ? layout.nodes.find((n) => n.depth === 0)
+        : null);
     if (!selected) return;
 
     const left = selected.x + selected.w / 2 - el.clientWidth / 2;
@@ -159,7 +162,7 @@ export default function Graph({ locale, view = "products", selectedSlug = null, 
   };
 
   return (
-    <div ref={scrollerRef}
+    <div ref={scrollerRef} className="graph-scroller"
       style={{ overflow: "auto", height: "100%", padding: "8px 0 40px", cursor: "grab", touchAction: "none" }}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove}
       onPointerUp={endDrag} onPointerCancel={endDrag} onClickCapture={onClickCapture}>
