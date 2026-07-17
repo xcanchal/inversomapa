@@ -1,0 +1,6 @@
+---
+// Root redirects to the default locale (Catalan).
+import { withBase } from "../data/taxonomy.js";
+const base = import.meta.env.BASE_URL;
+---
+<meta http-equiv="refresh" content={`0;url=${withBase("/ca/", base)}`} />

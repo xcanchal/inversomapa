@@ -1,0 +1,11 @@
+---
+import { UI, VIEWS, viewRootHref, withBase } from "../data/taxonomy.js";
+const { locale, active } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+<nav class="view-tabs" aria-label={UI.viewsLabel[locale]}>
+  {VIEWS.map((v) => (
+    <a href={withBase(viewRootHref(v.id, locale), base)} data-active={v.id === active}
+      aria-current={v.id === active ? "page" : undefined}>{v.label[locale]}</a>
+  ))}
+</nav>

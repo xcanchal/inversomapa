@@ -1,0 +1,176 @@
+---
+import { UI, withBase } from "../data/taxonomy.js";
+const { locale, title, description, altPath } = Astro.props;
+const site = Astro.site;
+const base = import.meta.env.BASE_URL;
+const appPath = (path) => withBase(path, base);
+const here = new URL(Astro.url.pathname, site);
+const alt = new URL(appPath(altPath), site);
+const defaultPath = locale === "ca" ? Astro.url.pathname : appPath(altPath);
+const otherLocale = locale === "ca" ? "es" : "ca";
+---
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={here} />
+    <link rel="alternate" hreflang={locale} href={here} />
+    <link rel="alternate" hreflang={otherLocale} href={alt} />
+    <link rel="alternate" hreflang="x-default" href={new URL(defaultPath, site)} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="sitemap" href={appPath("/sitemap-index.xml")} />
+    <script is:inline>
+      try {
+        var w = parseInt(localStorage.getItem("panel-w"), 10);
+        if (w) document.documentElement.style.setProperty("--panel-w", Math.min(Math.max(w, 340), 680) + "px");
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-name" href={appPath(`/${locale}/`)}>{UI.title[locale]}</a>
+      <span class="tagline">{UI.tagline[locale]}</span>
+      <nav class="lang" aria-label="Language">
+        <a href={locale === "ca" ? Astro.url.pathname : appPath(altPath)} data-active={locale === "ca"}>CA</a><a
+          href={locale === "es" ? Astro.url.pathname : appPath(altPath)} data-active={locale === "es"}>ES</a>
+      </nav>
+    </header>
+    <slot />
+    <script>
+      const pane = document.querySelector(".graph-pane");
+      const panel = document.querySelector(".panel");
+      if (pane && panel) {
+        const rz = document.createElement("div");
+        rz.className = "panel-resizer";
+        rz.setAttribute("aria-hidden", "true");
+        pane.appendChild(rz);
+        const root = document.documentElement;
+        const clamp = (w) => Math.min(Math.max(w, 340), Math.min(680, window.innerWidth * 0.55));
+        let start = null;
+        rz.addEventListener("pointerdown", (e) => {
+          start = { x: e.clientX, w: panel.offsetWidth };
+          rz.setPointerCapture(e.pointerId);
+          rz.classList.add("dragging");
+          document.body.classList.add("resizing");
+        });
+        rz.addEventListener("pointermove", (e) => {
+          if (!start) return;
+          const w = clamp(start.w + (start.x - e.clientX));
+          root.style.setProperty("--panel-w", w + "px");
+        });
+        const end = () => {
+          if (!start) return;
+          start = null;
+          rz.classList.remove("dragging");
+          document.body.classList.remove("resizing");
+          try { localStorage.setItem("panel-w", String(panel.offsetWidth)); } catch (e) {}
+        };
+        rz.addEventListener("pointerup", end);
+        rz.addEventListener("pointercancel", end);
+        rz.addEventListener("dblclick", () => {
+          root.style.removeProperty("--panel-w");
+          try { localStorage.removeItem("panel-w"); } catch (e) {}
+        });
+      }
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #f6f7f5; --surface: #fff; --ink: #182420; --muted: #5e6e66;
+    --line: #d6ded9; --green: #17694b; --green-deep: #0f5138; --tint: #e4efe8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .serif { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .site-header {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 20px 28px 14px; border-bottom: 1px solid var(--line);
+  }
+  .site-name {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 22px; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--ink); text-decoration: none;
+  }
+  .tagline { font-size: 13px; color: var(--muted); flex: 1; }
+  .lang a {
+    display: inline-block; border: 1px solid var(--line); background: var(--surface);
+    color: var(--muted); font-size: 12px; font-weight: 600;
+    padding: 5px 10px; text-decoration: none;
+  }
+  .lang a[data-active="true"] { background: var(--green); border-color: var(--green); color: #fff; }
+  .lang a:first-child { border-radius: 999px 0 0 999px; }
+  .lang a:last-child { border-radius: 0 999px 999px 0; margin-left: -1px; }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--panel-w, clamp(400px, 30vw, 500px));
+    min-height: calc(100vh - 63px);
+  }
+  @media (min-width: 901px) {
+    body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .layout { flex: 1; min-height: 0; }
+  }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .graph-pane { position: relative; overflow: hidden; min-width: 0; }
+  .panel {
+    background: var(--surface); border-left: 1px solid var(--line);
+    padding: 28px 26px 34px; overflow-y: auto;
+  }
+  @media (max-width: 900px) {
+    .panel { border-left: none; border-top: 1px solid var(--line); }
+  }
+  .view-tabs { position: absolute; top: 14px; left: 16px; z-index: 2; display: flex; }
+  .view-tabs a {
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+    font-size: 12.5px; font-weight: 600; padding: 7px 14px; text-decoration: none;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .view-tabs a:first-child { border-radius: 999px 0 0 999px; }
+  .view-tabs a:last-child { border-radius: 0 999px 999px 0; margin-left: -1px; }
+  .view-tabs a:hover { color: var(--green); border-color: var(--green); z-index: 1; }
+  .view-tabs a[data-active="true"] {
+    background: var(--green); border-color: var(--green); color: #fff; z-index: 1;
+  }
+  .graph-tip {
+    position: absolute; left: 16px; bottom: 12px;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px; color: var(--muted);
+    pointer-events: none; box-shadow: 0 1px 4px rgba(24, 36, 32, 0.06);
+  }
+  .panel-resizer {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 8px;
+    cursor: col-resize; touch-action: none; z-index: 2;
+  }
+  .panel-resizer:hover, .panel-resizer.dragging { box-shadow: inset -3px 0 0 var(--green); }
+  @media (max-width: 900px) { .panel-resizer { display: none; } }
+  body.resizing { cursor: col-resize; user-select: none; }
+  .breadcrumb { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; color: var(--muted); margin-bottom: 14px; }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--green); }
+  .panel h1 { margin: 0 0 4px; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+  .panel .sub { font-size: 13.5px; color: var(--green); margin-bottom: 10px; }
+  .panel p { font-size: 15px; line-height: 1.65; margin: 14px 0 22px; }
+  .section-label {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px;
+  }
+  .chip {
+    display: inline-block; margin: 0 8px 8px 0; padding: 7px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--bg);
+    font-size: 13px; color: var(--ink); text-decoration: none;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .chip:hover { border-color: var(--green); background: var(--tint); }
+</style>
